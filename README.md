@@ -9,9 +9,9 @@
 step 1,加入maven依赖
 ```maven
 <dependency>
-      <groupId>io.github.quanquan1996</groupId>
-      <artifactId>spring-telnet</artifactId>
-      <version>1.0-SNAPSHOT</version>
+            <groupId>io.github.quanquan1996</groupId>
+            <artifactId>spring-telnet</artifactId>
+            <version>1.0.0</version>
 </dependency>
 ```
 step2,启动类加 `@EnableTelnet` 注解
