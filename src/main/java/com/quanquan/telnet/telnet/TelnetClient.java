@@ -111,9 +111,7 @@ public class TelnetClient {
     public static void main(String[] std) throws InterruptedException {
         TelnetClient telnetClient = new TelnetClient("127.0.0.1", 8000, true);
         Thread.sleep(3000);
-        System.out.println("response1" + telnetClient.sendCmdSync("*lete.data.ad.common.utils.Md5Utils MD5Lower test123\n"));
-        System.out.println("response2" + telnetClient.sendCmdSync("*lete.data.ad.common.utils.Md5Utils MD5Lower test1234\n"));
-        System.out.println("response3" + telnetClient.sendCmdSync("*lete.data.ad.common.utils.Md5Utils MD5Lower test12345\n"));
+        System.out.println("response1" + telnetClient.sendCmdSync("*xx.data.ad.common.utils.Md5Utils MD5Lower test123\n"));
         telnetClient.close();
     }
 }

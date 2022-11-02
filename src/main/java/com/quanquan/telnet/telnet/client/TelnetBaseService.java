@@ -3,8 +3,6 @@ package com.quanquan.telnet.telnet.client;
 import com.quanquan.telnet.telnet.TelnetClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -13,7 +11,6 @@ import javax.annotation.PreDestroy;
  * @Author qiupengjun
  * @Date 2022 06 30 10 17
  **/
-@Component
 public abstract class TelnetBaseService {
     protected final Logger log =  LoggerFactory.getLogger(this.getClass());
     public TelnetClient adApiTelnetClient;
@@ -42,7 +39,6 @@ public abstract class TelnetBaseService {
         adApiTelnetClient.close();
     }
 
-    @Async
     public void sendCmdToApi(String cmd) {
         adApiTelnetClient.sendCmd(cmd);
     }
