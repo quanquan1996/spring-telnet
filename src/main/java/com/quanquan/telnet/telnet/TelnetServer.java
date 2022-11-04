@@ -10,6 +10,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import java.net.InetSocketAddress;
 
 /**
@@ -21,12 +22,12 @@ public class TelnetServer {
 
     protected final Logger log =  LoggerFactory.getLogger(this.getClass());
     private Channel serverChannel;
+    @Resource(name = "serverBootstrapTelnet")
+    private  ServerBootstrap serverBootstrap;
 
-    private final ServerBootstrap serverBootstrap;
+    public TelnetServer(ServerBootstrap serverBootstrapTelnet) {
 
-    public TelnetServer(ServerBootstrap serverBootstrap) {
-
-        this.serverBootstrap = serverBootstrap;
+        this.serverBootstrap = serverBootstrapTelnet;
     }
 
     private Channel getTelnetPortChannel() throws Exception {

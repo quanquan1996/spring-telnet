@@ -29,7 +29,7 @@ import java.util.concurrent.*;
  * @Date 2022 06 23 15 10
  **/
 @Component
-@Qualifier("telnetServerHandler")
+@Qualifier("springTelnetServerHandler")
 @ChannelHandler.Sharable
 public class TelnetServerHandler extends ChannelInboundHandlerAdapter {
     protected final Logger log =  LoggerFactory.getLogger(this.getClass());

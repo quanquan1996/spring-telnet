@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
  * @Date 2022 06 23 15 10
  **/
 @Component
-@Qualifier("telnetChannelInitializer")
+@Qualifier("springTelnetChannelInitializer")
 public class TelnetChannelInitializer extends ChannelInitializer<SocketChannel> {
 
     private static final StringDecoder DECODER = new StringDecoder();
@@ -24,7 +24,7 @@ public class TelnetChannelInitializer extends ChannelInitializer<SocketChannel> 
 
     private final ChannelInboundHandlerAdapter serverHandler;
 
-    public TelnetChannelInitializer(@Qualifier("telnetServerHandler") ChannelInboundHandlerAdapter serverHandler) {
+    public TelnetChannelInitializer(@Qualifier("springTelnetServerHandler") ChannelInboundHandlerAdapter serverHandler) {
         this.serverHandler = serverHandler;
     }
 

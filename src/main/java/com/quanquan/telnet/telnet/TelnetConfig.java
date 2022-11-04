@@ -21,11 +21,11 @@ import java.util.Map;
 public class TelnetConfig {
     private final TelnetChannelInitializer telnetChannelInitializer;
 
-    public TelnetConfig(@Qualifier("telnetChannelInitializer") TelnetChannelInitializer telnetChannelInitializer) {
+    public TelnetConfig(@Qualifier("springTelnetChannelInitializer") TelnetChannelInitializer telnetChannelInitializer) {
         this.telnetChannelInitializer = telnetChannelInitializer;
     }
 
-    @Bean(name = "serverBootstrap")
+    @Bean(name = "serverBootstrapTelnet")
     public ServerBootstrap bootstrap() {
         ServerBootstrap b = new ServerBootstrap();
         NioEventLoopGroup bossGroup = new NioEventLoopGroup(1);
@@ -40,21 +40,4 @@ public class TelnetConfig {
         return b;
     }
 
-    @Bean(name = "tcpChannelOptions")
-    public Map<ChannelOption<?>, Object> tcpChannelOptions() {
-        Map<ChannelOption<?>, Object> options = new HashMap<>();
-        options.put(ChannelOption.SO_KEEPALIVE, true);
-        options.put(ChannelOption.SO_BACKLOG, 1024);
-        return options;
-    }
-
-    @Bean(name = "bossGroup", destroyMethod = "shutdownGracefully")
-    public NioEventLoopGroup bossGroup() {
-        return new NioEventLoopGroup(1);
-    }
-
-    @Bean(name = "workerGroup", destroyMethod = "shutdownGracefully")
-    public NioEventLoopGroup workerGroup() {
-        return new NioEventLoopGroup(1);
-    }
 }
