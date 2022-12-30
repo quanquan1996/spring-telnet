@@ -4,6 +4,7 @@
 1. 测试阶段查看数据，方便调用方法，不用再额外写一些http接口去测试调用，或者是后门代码，节约时间，精简代码
 2. 线上定位问题，通过执行容器内方法，可以定位很多问题。或者是线上定时任务重跑场景，或者是后门场景，都是很方便的。
 3. 用做项目除http以外的通信协议。当需要内网通信时，可以用本项目自带的client工具rpc调用安装了本项目的服务，被调用方甚至不需要写代码
+4. 新功能：可以通过连续的命令编写逻辑，即使你想执行的逻辑没有提前写好方法，你也能现写逻辑，你可以对你的程序做任何事情
 # 使用指南
 ## 配置
 step 1,加入maven依赖
@@ -11,7 +12,7 @@ step 1,加入maven依赖
 <dependency>
             <groupId>io.github.quanquan1996</groupId>
             <artifactId>spring-telnet</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.2</version>
 </dependency>
 ```
 step2,启动类加 `@EnableTelnet` 注解
@@ -69,6 +70,34 @@ hello
 
 在请求的前面加入&则后面的命令会进入线程池异步执行。
 ## 高级用法
+### 高级命令
+#### 使用 . 来循环调用
+有时候我们执行命令可能需要用返回的对象再调用方法，比如``` redisTemplate.opsForValue().set(key, value);```这个java语句，就连续调用了方法。    
+在spring telnet里也能方便的实现，只需要执行``` *redisTemplate opsForValue . set key value ```就可以要注意 . 的前后有一个空格，这样 . 前面命令的返回，会作为后面方法执行的主体。
+#### -AS
+在你调用方法后，如果你想要暂存这个方法结果的对象，你可以在命令末尾加上—AS[objName]。这样你在后续的命令中，就可以使用-FROM命令来引用这个保存的对象
+如```*webService test 123 -AStestObj``` 这个命令执行后，webService的test方法的返回结果将会以testObj这个名称被保存，使用-FROM命令就可以调用这个保存的对象。
+#### -FROM
+你只需要使用 —FROM[objName] 就可以引用你之前保存的对象了，这个对象可以用作bean来执行方法，也可以用作方法的入参。
+比如```*webService test 123 -AStestObj```webService的test方法返回了一个String的对象,我们用as吧这个对象命名为testObj并保存了
+这时候我们可以使用 ```-FROMtestObj subString 3```来使用这个String对象并调用String的subString方法
+也可以使用 ``` *webService test2 -FROMtestObj 123123```这个命令，我们在方法的参数上使用—FROM,直接引用了之前保存的String对象作为方法的入参之一    
+上面说的可能有点抽象，下面我们用一组mongodb查询命令来解释
+```java
+*org.springframework.data.mongodb.core.query.Criteria where url . is itunes.apple.com -AScriteria
+*org.springframework.data.mongodb.core.query.Query query -FROMcriteria -ASquery
+*mongodbTemplate findOne -FROMquery java.util.Map urlDb
+上面三句脚本，等同于在mongodb urlDb这张表里查询了url为itunes.apple.com的数据
+等同于java查询
+return mongodbTemplate.findOne(Query.query(Criteria.where("url").is("itunes.apple.com")),Map.class,"urlDb");
+
+第一句脚本，先用*加类的全名，找到了一个Criteria的对象，然后使用‘ . ’来实现Criteria.where("url").is("itunes.apple.com")这一句，最后用—AS把这个返回对象暂存起来，起名叫criteria     
+第二句脚本，先用*加类全名，找到一个Query的对象，使用了query方法，这个方法需要Criteria的对象作为入参，我们直接拿第一步保存的对象，使用-FROMcriteria引用上一步暂存的对象作为query方法入参。然后用AS吧query的结果保存
+第三局脚本，先用*加bean名称，从spring容器内找到mongodbTemplate，然后执行findOne方法，这个方法需要三个参数，Query对象（数据库查询的语句），Class对象（数据返回的载体对象），String对象（数据库表名）,这里class对象我们可以直接给class名就可以，Query对象我们用-FROMquery来引用第二个脚本保存的对象，然后执行后，就查询出来了数据库的数据返回到控制台
+```
+以上只是利用telnet脚本来执行一个自定义的数据库查询，利用好-FROM和-AS，再复杂的逻辑都可以现写，相当于动态语言了。
+#### clearObj
+单独执行clearObj，会清除之前用-AS保存的对象，建议完成命令后执行一下清除，这样节省内存空间的呢。
 ### 把spring-telnet当做rpc框架
 需要Server和Client端同时依赖spring-telnet，Client端只需要继承TelnetBaseService类，并配置服务端spring-telnet监听的端口，即可以通过命令的方式，实现rpc调用
 eg:
