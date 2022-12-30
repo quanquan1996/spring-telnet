@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -46,7 +45,7 @@ public class TelnetServerHandler extends ChannelInboundHandlerAdapter {
     private final ThreadPoolExecutor asyncPool = new ThreadPoolExecutor(
             corePoolSize, maxPoolSize, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(maxQueueLength), new ThreadPoolExecutor.CallerRunsPolicy()
     );
-
+    private Map<String,Object> saveObject = new HashMap<>();
     public TelnetServerHandler(SpringBeanUtil springBeanUtil) {
         this.springBeanUtil = springBeanUtil;
     }
@@ -115,6 +114,12 @@ public class TelnetServerHandler extends ChannelInboundHandlerAdapter {
                 }
             }
         }
+        if (StringUtils.startsWith(command, "-FROM")) {
+            command = command.substring(5);
+            String name = command.split(" ")[0];
+            command = command.substring(name.length());
+            handler = saveObject.get("name");
+        }
         if (StringUtils.startsWith(command, "| ")) {
             // | ls, fefe, afef
             for (String subCommand : StringUtils.split(command.substring(2), ";")) {
@@ -142,6 +147,11 @@ public class TelnetServerHandler extends ChannelInboundHandlerAdapter {
             return;
         } else if (StringUtils.equals(command, "hello")) {
             ctx.write("hello" + "\r\n");
+            ctx.writeAndFlush("> ");
+            return;
+        }else if (StringUtils.equals(command, "clearObj")) {
+            saveObject.clear();
+            ctx.write("delete all saved object" + "\r\n");
             ctx.writeAndFlush("> ");
             return;
         }
@@ -185,20 +195,48 @@ public class TelnetServerHandler extends ChannelInboundHandlerAdapter {
         if (background) {
             asyncPool.execute(() -> {
                 try {
-                    invoke(command, handler);
+                    invokeLink(command, handler);
                 } catch (Exception e) {
                     log.error("telnet cmd run background error,cmd:{}", command, e);
                 }
             });
             return "run background";
         } else {
-            return invoke(command, handler);
+            String returnout = "";
+            returnout = JSONObject.toJSONString(invokeLink(command, handler));
+            return returnout;
         }
     }
 
-    public String invoke(String command, Object handler) throws Exception {
+    public Object invokeLink(String command, Object handler) throws Exception {
+        Object obj = handler;
+        String[] commands = command.split(" . ");
+        for (String cmd : commands) {
+            obj = invoke(cmd, obj);
+        }
+        String returnout = "";
+        returnout = JSONObject.toJSONString(obj);
+        log.info("telnet invokeLink cmd:{},result:{}", command, returnout);
+        return obj;
+    }
 
+    public Object invoke(String command, Object handler) throws Exception {
+        boolean save = false;
+        String saveName = null;
         List<String> args = CommandArgumentParser.parseLine(command);
+        if (args.get(args.size() - 1).startsWith("-AS")) {
+            String asStr = args.get(args.size() - 1);
+            args.remove(args.size() - 1);
+            save = true;
+            saveName = asStr.substring(3);
+        }
+        if (args.get(0).equals("-self")) {
+            if (save) {
+                saveObject.put(saveName, handler);
+                return "obj save name:" + saveName;
+            }
+            return handler;
+        }
         List<Object> parameters = new ArrayList<>();
 
         Method[] methods = handler.getClass().getDeclaredMethods();
@@ -215,6 +253,10 @@ public class TelnetServerHandler extends ChannelInboundHandlerAdapter {
             method.setAccessible(true);
             for (i = 0; i < parameterTypes.length; i++) {
                 String arg = args.get(i + 1);
+                if (arg.startsWith("-FROM")) {
+                    parameters.add(saveObject.get(arg.substring(5)));
+                    continue;
+                }
                 Class<?> parameterType = parameterTypes[i];
                 if (String.class.equals(parameterType)) {
                     parameters.add(arg);
@@ -236,6 +278,14 @@ public class TelnetServerHandler extends ChannelInboundHandlerAdapter {
                     parameters.add(Boolean.valueOf(arg));
                     continue;
                 }
+                if (Object.class.equals(parameterType)) {
+                    parameters.add(arg);
+                    continue;
+                }
+                if (Class.class.equals(parameterType)) {
+                    parameters.add(Class.forName(arg));
+                    continue;
+                }
                 try {
                     parameters.add(JSONObject.parseObject(arg, parameterType));
                 } catch (Exception ex) {
@@ -245,11 +295,11 @@ public class TelnetServerHandler extends ChannelInboundHandlerAdapter {
             }
 
             Object returnObj = method.invoke(handler, parameters.toArray(new Object[]{}));
-
-            String returnout = "";
-            returnout = JSONObject.toJSONString(returnObj);
-            log.info("telnet cmd run  finish,result:{}", returnout);
-            return returnout;
+            if (save) {
+                saveObject.put(saveName, returnObj);
+                return "obj save name:" + saveName;
+            }
+            return returnObj;
         }
         return "method not found";
     }
