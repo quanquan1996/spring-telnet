@@ -91,10 +91,13 @@ hello
 等同于java查询
 return mongodbTemplate.findOne(Query.query(Criteria.where("url").is("itunes.apple.com")),Map.class,"urlDb");
 
-第一句脚本，先用*加类的全名，找到了一个Criteria的对象，然后使用‘ . ’来实现Criteria.where("url").is("itunes.apple.com")这一句，最后用—AS把这个返回对象暂存起来，起名叫criteria     
-第二句脚本，先用*加类全名，找到一个Query的对象，使用了query方法，这个方法需要Criteria的对象作为入参，我们直接拿第一步保存的对象，使用-FROMcriteria引用上一步暂存的对象作为query方法入参。然后用AS吧query的结果保存
-第三局脚本，先用*加bean名称，从spring容器内找到mongodbTemplate，然后执行findOne方法，这个方法需要三个参数，Query对象（数据库查询的语句），Class对象（数据返回的载体对象），String对象（数据库表名）,这里class对象我们可以直接给class名就可以，Query对象我们用-FROMquery来引用第二个脚本保存的对象，然后执行后，就查询出来了数据库的数据返回到控制台
 ```
+第一句脚本，先用*加类的全名，找到了一个Criteria的对象，然后使用‘ . ’来实现Criteria.where("url").is("itunes.apple.com")这一句，最后用—AS把这个返回对象暂存起来，起名叫criteria       
+
+第二句脚本，先用*加类全名，找到一个Query的对象，使用了query方法，这个方法需要Criteria的对象作为入参，我们直接拿第一步保存的对象，使用-FROMcriteria引用上一步暂存的对象作为query方法入参。然后用AS吧query的结果保存      
+
+第三句脚本，先用*加bean名称，从spring容器内找到mongodbTemplate，然后执行findOne方法，这个方法需要三个参数，Query对象（数据库查询的语句），Class对象（数据返回的载体对象），String对象（数据库表名）,这里class对象我们可以直接给class名就可以，Query对象我们用-FROMquery来引用第二个脚本保存的对象，然后执行后，就查询出来了数据库的数据返回到控制台      
+
 以上只是利用telnet脚本来执行一个自定义的数据库查询，利用好-FROM和-AS，再复杂的逻辑都可以现写，相当于动态语言了。
 #### clearObj
 单独执行clearObj，会清除之前用-AS保存的对象，建议完成命令后执行一下清除，这样节省内存空间的呢。
