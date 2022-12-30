@@ -6,7 +6,7 @@
 
     <groupId>io.github.quanquan1996</groupId>
     <artifactId>spring-telnet</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
     <description>spring telnet server</description>
