@@ -219,11 +219,81 @@ public class TelnetServerHandler extends ChannelInboundHandlerAdapter {
         log.info("telnet invokeLink cmd:{},result:{}", command, returnout);
         return obj;
     }
+    static List<String> parseLine(final String untrimmedLine) {
+        final int numTokensToCollect = -1;
+        assert untrimmedLine != null;
+        final String line = untrimmedLine.trim();
+        List<String> tokens = new ArrayList<>();
+        String currentToken = "";
+        // state machine being either in neutral state, in singleHyphenOpen state, or in doubleHyphenOpen State.
+        boolean singleHyphenOpen = false;
+        boolean doubleHyphenOpen = false;
+        int index = 0;
+        for (; index < line.length(); index++) {
+            if (tokens.size() == numTokensToCollect) {
+                break;
+            }
+            char ch = line.charAt(index);
+            // escaped char?
+            if (ch == '\\' && (singleHyphenOpen || doubleHyphenOpen)) {
+                ch = (index == line.length() - 1) ? '\\' : line.charAt(index + 1);
+                index++;
+                currentToken += ch;
+                continue;
+            }
 
+            if (ch == '"' && !singleHyphenOpen) {
+                if (doubleHyphenOpen) {
+                    tokens.add(currentToken);
+                    currentToken = "";
+                    doubleHyphenOpen = false;
+                } else {
+                    if (currentToken.length() > 0) {
+                        tokens.add(currentToken);
+                        currentToken = "";
+                    }
+                    doubleHyphenOpen = true;
+                }
+                continue;
+            }
+            if (ch == '\'' && !doubleHyphenOpen) {
+                if (singleHyphenOpen) {
+                    tokens.add(currentToken);
+                    currentToken = "";
+                    singleHyphenOpen = false;
+                } else {
+                    if (currentToken.length() > 0) {
+                        tokens.add(currentToken);
+                        currentToken = "";
+                    }
+                    singleHyphenOpen = true;
+                }
+                continue;
+            }
+            if (ch == ' ' && !doubleHyphenOpen && !singleHyphenOpen) {
+                if (currentToken.length() > 0) {
+                    tokens.add(currentToken);
+                    currentToken = "";
+                }
+                continue;
+            }
+            currentToken += ch;
+        } // end for char in line
+        if (index == line.length() && doubleHyphenOpen) {
+            throw new IllegalArgumentException("Missing closing in " + line + " -- " + tokens);
+        }
+        if (index == line.length() && singleHyphenOpen) {
+            throw new IllegalArgumentException("Missing closing \' in " + line + " -- " + tokens);
+        }
+        if (currentToken.length() > 0) {
+            tokens.add(currentToken);
+        }
+        return tokens;
+    }
     public Object invoke(String command, Object handler) throws Exception {
         boolean save = false;
         String saveName = null;
-        List<String> args = CommandArgumentParser.parseLine(command);
+        List<String> args = parseLine(command);
         if (args.get(args.size() - 1).startsWith("-AS")) {
             String asStr = args.get(args.size() - 1);
             args.remove(args.size() - 1);
