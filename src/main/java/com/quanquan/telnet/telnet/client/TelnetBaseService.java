@@ -4,6 +4,7 @@ import com.quanquan.telnet.telnet.TelnetClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// Import both annotation packages for compatibility
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 

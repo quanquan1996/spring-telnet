@@ -13,34 +13,56 @@
     <url>https://github.com/quanquan1996/spring-telnet</url>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.charset>UTF-8</maven.compiler.charset>
+        <!-- Default to Java 8 for backward compatibility -->
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <maven.compiler.charset>UTF-8</maven.compiler.charset>
-
+        <!-- Supported JDK versions -->
+        <java8.version>1.8</java8.version>
+        <java11.version>11</java11.version>
+        <java17.version>17</java17.version>
+        <java21.version>21</java21.version>
+        <!-- Dependency versions -->
+        <netty.version>4.1.100.Final</netty.version>
+        <spring-boot.version>3.0.6</spring-boot.version>
     </properties>
 
     <dependencies>
+        <!-- Spring Boot dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
-            <version>3.0.6</version>
+            <version>${spring-boot.version}</version>
             <scope>compile</scope>
         </dependency>
+        
+        <!-- Support for both javax and jakarta annotations -->
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <version>1.3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <version>2.1.1</version>
+        </dependency>
+        
         <!-- telnet enable -->
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-transport</artifactId>
-            <version>5.0.0.Alpha1</version>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec</artifactId>
-            <version>5.0.0.Alpha1</version>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-handler</artifactId>
-            <version>5.0.0.Alpha1</version>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -51,13 +73,21 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.5</version>
+            <version>3.12.0</version>
         </dependency>
 
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
             <version>2.0.8</version>
+        </dependency>
+        
+        <!-- Test dependencies -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.9.2</version>
+            <scope>test</scope>
         </dependency>
         <!-- telnet enable end-->
     </dependencies>
@@ -117,18 +147,130 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.11.0</version>
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <compilerArgs>
+                        <!-- Enable compatibility warnings -->
+                        <arg>-Xlint:deprecation</arg>
+                        <arg>-Xlint:unchecked</arg>
+                    </compilerArgs>
+                    <showWarnings>true</showWarnings>
+                    <showDeprecation>true</showDeprecation>
                 </configuration>
             </plugin>
-
+            
+            <!-- Testing plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.1.2</version>
+                <configuration>
+                    <argLine>
+                        --add-opens java.base/java.lang=ALL-UNNAMED
+                        --add-opens java.base/java.util=ALL-UNNAMED
+                    </argLine>
+                </configuration>
+            </plugin>
+            
+            <!-- Toolchains plugin for multi-JDK support -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-toolchains-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>toolchain</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <toolchains>
+                        <jdk>
+                            <version>${maven.compiler.target}</version>
+                        </jdk>
+                    </toolchains>
+                </configuration>
+            </plugin>
+            
+            <!-- Enforce plugin to check minimum Java version -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <id>enforce-java</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <version>[1.8,)</version>
+                                    <message>This project requires Java 8 or higher</message>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
 
     <profiles>
+        <!-- Profile for Java 8 -->
+        <profile>
+            <id>java8</id>
+            <activation>
+                <jdk>1.8</jdk>
+            </activation>
+            <properties>
+                <maven.compiler.source>${java8.version}</maven.compiler.source>
+                <maven.compiler.target>${java8.version}</maven.compiler.target>
+            </properties>
+        </profile>
+        
+        <!-- Profile for Java 11 -->
+        <profile>
+            <id>java11</id>
+            <activation>
+                <jdk>11</jdk>
+            </activation>
+            <properties>
+                <maven.compiler.source>${java11.version}</maven.compiler.source>
+                <maven.compiler.target>${java11.version}</maven.compiler.target>
+            </properties>
+        </profile>
+        
+        <!-- Profile for Java 17 -->
+        <profile>
+            <id>java17</id>
+            <activation>
+                <jdk>17</jdk>
+            </activation>
+            <properties>
+                <maven.compiler.source>${java17.version}</maven.compiler.source>
+                <maven.compiler.target>${java17.version}</maven.compiler.target>
+            </properties>
+        </profile>
+        
+        <!-- Profile for Java 21 -->
+        <profile>
+            <id>java21</id>
+            <activation>
+                <jdk>21</jdk>
+            </activation>
+            <properties>
+                <maven.compiler.source>${java21.version}</maven.compiler.source>
+                <maven.compiler.target>${java21.version}</maven.compiler.target>
+            </properties>
+        </profile>
+
         <profile>
             <id>release</id>
             <distributionManagement>
@@ -147,7 +289,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.1.1</version>
+                        <version>3.5.0</version>
                         <executions>
                             <execution>
                                 <phase>package</phase>
@@ -156,6 +298,8 @@
                                 </goals>
                                 <configuration>
                                     <failOnError>false</failOnError>
+                                    <doclint>none</doclint>
+                                    <source>${maven.compiler.source}</source>
                                 </configuration>
                             </execution>
                         </executions>
@@ -164,7 +308,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.6</version>
+                        <version>3.1.0</version>
                         <executions>
                             <execution>
                                 <id>oss</id>
@@ -178,7 +322,7 @@
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.6.8</version>
+                        <version>1.6.13</version>
                         <extensions>true</extensions>
                         <configuration>
                             <serverId>oss</serverId>

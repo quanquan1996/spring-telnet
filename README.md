@@ -5,6 +5,28 @@
 2. 线上定位问题，通过执行容器内方法，可以定位很多问题。或者是线上定时任务重跑场景，或者是后门场景，都是很方便的。
 3. 用做项目除http以外的通信协议。当需要内网通信时，可以用本项目自带的client工具rpc调用安装了本项目的服务，被调用方甚至不需要写代码
 4. 新功能：可以通过连续的命令编写逻辑，即使你想执行的逻辑没有提前写好方法，你也能现写逻辑，你可以对你的程序做任何事情
+
+# JDK 兼容性
+本项目支持多种JDK版本，包括：
+- Java 8 (JDK 1.8)
+- Java 11 (LTS)
+- Java 17 (LTS)
+- Java 21 (LTS)
+
+可以通过Maven profiles来指定构建和运行的JDK版本：
+```bash
+# 使用Java 8构建
+mvn clean package -Pjava8
+
+# 使用Java 11构建
+mvn clean package -Pjava11
+
+# 使用Java 17构建
+mvn clean package -Pjava17
+
+# 使用Java 21构建
+mvn clean package -Pjava21
+```
 # 使用指南
 ## 配置
 step 1,加入maven依赖

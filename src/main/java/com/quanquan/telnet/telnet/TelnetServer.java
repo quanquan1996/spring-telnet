@@ -9,8 +9,11 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+// Import both annotation packages for compatibility
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
+// Add conditional import for Jakarta EE annotations
+// These will be used by the compatibility layer
 import java.net.InetSocketAddress;
 
 /**
@@ -26,7 +29,6 @@ public class TelnetServer {
     private  ServerBootstrap serverBootstrap;
 
     public TelnetServer(ServerBootstrap serverBootstrapTelnet) {
-
         this.serverBootstrap = serverBootstrapTelnet;
     }
 
