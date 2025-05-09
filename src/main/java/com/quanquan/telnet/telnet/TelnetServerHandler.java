@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+// Import both annotation packages for compatibility
 import javax.annotation.PreDestroy;
 import java.beans.Introspector;
 import java.io.PrintWriter;
